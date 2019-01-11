@@ -1,50 +1,128 @@
-/* global __dirname, require, module*/
+/* eslint-disable */
+const path = require('path')
+const webpack = require('webpack')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CleanWebpackPlugin = require('clean-webpack-plugin')
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin')
+const fs = require('fs')
+const eslintFriendlyFormatter = require('eslint-friendly-formatter')
+const SpriteLoaderPlugin = require('svg-sprite-loader/plugin')
 
-const webpack = require('webpack');
-const UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
-const path = require('path');
-const env  = require('yargs').argv.env; // use --env with webpack 2
-
-let libraryName = 'Library';
-
-let plugins = [], outputFile;
-
-if (env === 'build') {
-  plugins.push(new UglifyJsPlugin({ minimize: true }));
-  outputFile = libraryName + '.min.js';
-} else {
-  outputFile = libraryName + '.js';
+function generateHtmlPlugins(templateDir) {
+  const templateFiles = fs.readdirSync(path.resolve(__dirname, templateDir))
+  return templateFiles.map((item) => {
+    const parts = item.split('.')
+    const name = parts[0]
+    const extension = parts[1]
+    return new HtmlWebpackPlugin({
+      filename: `${name}.html`,
+      template: path.resolve(__dirname, `${templateDir}/${name}.${extension}`),
+      inject: false,
+      cdnJsThree: true
+    })
+  })
 }
 
-const config = {
-  entry: __dirname + '/src/index.js',
-  devtool: 'source-map',
+const htmlPlugins = generateHtmlPlugins('./src/html/views')
+
+module.exports = {
+  entry: ['./src/js/index.js', './src/scss/style.scss'],
   output: {
-    path: __dirname + '/lib',
-    filename: outputFile,
-    library: libraryName,
-    libraryTarget: 'umd',
-    umdNamedDefine: true
+    filename: './js/bundle.js'
   },
+  devtool: 'source-map',
   module: {
-    rules: [
+    rules: [{
+      test: /\.js$/,
+      include: path.resolve(__dirname, 'src/js'),
+      use: [{
+        loader: 'babel-loader'
+      },
+        {
+          loader: 'eslint-loader',
+          options: {
+            emitWarning: true,
+            formatter: eslintFriendlyFormatter,
+            configFile: '.eslintrc'
+          }
+        }
+      ]
+    },
       {
-        test: /(\.jsx|\.js)$/,
-        loader: 'babel-loader',
-        exclude: /(node_modules|bower_components)/
+        test: /\.(sass|scss)$/,
+        include: path.resolve(__dirname, 'src/scss'),
+        use: ExtractTextPlugin.extract({
+          use: [{
+            loader: 'css-loader',
+            options: {
+              sourceMap: true,
+            }
+          },
+            {
+              loader: 'postcss-loader',
+              options: {
+                sourceMap: true
+              }
+            },
+            {
+              loader: 'sass-loader'
+            }
+          ]
+        })
       },
       {
-        test: /(\.jsx|\.js)$/,
-        loader: 'eslint-loader',
-        exclude: /node_modules/
+        test: /\.html$/,
+        include: path.resolve(__dirname, 'src/html/includes'),
+        use: ['raw-loader']
+      },
+      {
+        test: /\.svg$/,
+        include: path.resolve(__dirname, 'src/img/svg-sprites'),
+        use: [{
+          loader: 'svg-sprite-loader'
+        },
+          {
+            loader: 'svgo-loader'
+          }
+        ]
       }
     ]
   },
-  resolve: {
-    modules: [path.resolve('./src')],
-    extensions: ['.json', '.js']
-  },
-  plugins: plugins
-};
-
-module.exports = config;
+  plugins: [
+    new webpack.NoEmitOnErrorsPlugin(),
+    new FriendlyErrorsWebpackPlugin({
+      compilationSuccessInfo: {
+        messages: ['Your website is running here: http://localhost:8080']
+      }
+    }),
+    new ExtractTextPlugin({
+      filename: './css/style.bundle.css',
+      allChunks: true
+    }),
+    new CleanWebpackPlugin(['dist']),
+    new CopyWebpackPlugin([{
+      from: './src/fonts',
+      to: './fonts'
+    },
+      {
+        from: './src/favicon',
+        to: './favicon'
+      },
+      {
+        from: './src/img',
+        to: './img'
+      }
+    ]),
+    new SpriteLoaderPlugin(),
+  ].concat(htmlPlugins),
+  devServer: {
+    quiet: true,
+    overlay: {
+      warnings: false,
+      errors: true
+    }
+  }
+}
+/* eslint-enable */

@@ -1,0 +1,14 @@
+{
+  "extends": ["standard"],
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "rules": {
+    "space-before-function-paren": 0
+  }
+}
