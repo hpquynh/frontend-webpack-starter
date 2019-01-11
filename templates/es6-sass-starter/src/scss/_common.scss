@@ -1,0 +1,28 @@
+/**
+--------------------------------------------------
+  Common
+--------------------------------------------------
+**/
+html {
+  font: {
+    family: $ff-arial;
+    size: $fs-base;
+  }
+  line-height: 1.5;
+  background-color: $c-white;
+  box-sizing: border-box;
+  color: $c-black;
+}
+
+*,
+*:after,
+*:before {
+  box-sizing: inherit;
+}
+
+a {
+  text-decoration: none;
+
+  &:hover {
+  }
+}

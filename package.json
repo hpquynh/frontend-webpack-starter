@@ -1,0 +1,23 @@
+{
+  "name": "frontend-webpack-starter",
+  "version": "0.0.1",
+  "repository": "",
+  "description": "Project scafolding generator",
+  "author": "Quynh HP <hophuongquynh92@gmail.com> (https://hpquynh.github.io/)",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "inquirer": "^6.2.1"
+  },
+  "keywords": [
+    "webpack",
+    "es6",
+    "starter"
+  ],
+  "bin": {
+    "generate-starter": "./index.js"
+  }
+}
